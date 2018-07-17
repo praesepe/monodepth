@@ -1,0 +1,24 @@
+# Ignore python compiled files
+*.pyc
+
+# Ignore output files
+*.jpg
+*.png
+*.npy
+*.out
+*.flo
+runs/
+
+# Ignore log and model files
+log/
+model_*
+*_model
+
+# Ignore jupyter checkpoint files
+.ipynb_checkpoints/
+
+# Ignore kitti devkit
+devkit/
+
+.DS_Store
+.git/

@@ -1,10 +1,10 @@
-# Copyright UCL Business plc 2017. Patent Pending. All rights reserved. 
+# Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
 #
 # The MonoDepth Software is licensed under the terms of the UCLB ACP-A licence
 # which allows for non-commercial use only, the full terms of which are made
 # available in the LICENSE file.
 #
-# For any other use of the software not covered by the UCLB ACP-A Licence, 
+# For any other use of the software not covered by the UCLB ACP-A Licence,
 # please contact info@uclb.com
 
 """Fully convolutional model for monocular depth estimation
@@ -21,7 +21,7 @@ import tensorflow.contrib.slim as slim
 
 from bilinear_sampler import *
 
-monodepth_parameters = namedtuple('parameters', 
+monodepth_parameters = namedtuple('parameters',
                         'encoder, '
                         'height, width, '
                         'batch_size, '
@@ -54,7 +54,7 @@ class MonodepthModel(object):
             return
 
         self.build_losses()
-        self.build_summaries()     
+        self.build_summaries()
 
     def gradient_x(self, img):
         gx = img[:,:,:-1,:] - img[:,:,1:,:]
@@ -127,6 +127,7 @@ class MonodepthModel(object):
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
+        #return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=None)
         return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
 
     def conv_block(self, x, num_out_layers, kernel_size):
@@ -141,6 +142,7 @@ class MonodepthModel(object):
 
     def resconv(self, x, num_layers, stride):
         do_proj = tf.shape(x)[3] != num_layers or stride == 2
+        print("what the hell", tf.shape(x)[3], num_layers, tf.shape(x)[3] != num_layers)
         shortcut = []
         conv1 = self.conv(x,         num_layers, 1, 1)
         conv2 = self.conv(conv1,     num_layers, 3, stride)
@@ -177,7 +179,7 @@ class MonodepthModel(object):
             upconv = self.upconv
 
         with tf.variable_scope('encoder'):
-            conv1 = self.conv_block(self.model_input,  32, 7) # H/2
+            conv1 = self.conv_block(self.model_input,  32, 7) # H/2            
             conv2 = self.conv_block(conv1,             64, 5) # H/4
             conv3 = self.conv_block(conv2,            128, 3) # H/8
             conv4 = self.conv_block(conv3,            256, 3) # H/16
@@ -192,7 +194,7 @@ class MonodepthModel(object):
             skip4 = conv4
             skip5 = conv5
             skip6 = conv6
-        
+
         with tf.variable_scope('decoder'):
             upconv7 = upconv(conv7,  512, 3, 2) #H/64
             concat7 = tf.concat([upconv7, skip6], 3)
@@ -239,7 +241,9 @@ class MonodepthModel(object):
 
         with tf.variable_scope('encoder'):
             conv1 = conv(self.model_input, 64, 7, 2) # H/2  -   64D
+            self.conv1 = conv1
             pool1 = self.maxpool(conv1,           3) # H/4  -   64D
+            self.pool1 = pool1
             conv2 = self.resblock(pool1,      64, 3) # H/8  -  256D
             conv3 = self.resblock(conv2,     128, 4) # H/16 -  512D
             conv4 = self.resblock(conv3,     256, 6) # H/32 - 1024D
@@ -251,7 +255,7 @@ class MonodepthModel(object):
             skip3 = conv2
             skip4 = conv3
             skip5 = conv4
-        
+
         # DECODING
         with tf.variable_scope('decoder'):
             upconv6 = upconv(conv5,   512, 3, 2) #H/32
@@ -312,8 +316,15 @@ class MonodepthModel(object):
             self.disp_est  = [self.disp1, self.disp2, self.disp3, self.disp4]
             self.disp_left_est  = [tf.expand_dims(d[:,:,:,0], 3) for d in self.disp_est]
             self.disp_right_est = [tf.expand_dims(d[:,:,:,1], 3) for d in self.disp_est]
+            print("answer", self.left_pyramid[0], self.disp_right_est[0])
 
         if self.mode == 'test':
+            #print("this is the output of the model", self.disp_left_est[0].shape)
+            #print(self.disp_left_est)
+            #print(self.left_pyramid[0].shape)
+            #kk = tf.reduce_max(self.disp_left_est[0])
+            #print(kk)
+            #print(self.left_pyramid[3])
             return
 
         # GENERATE IMAGES
@@ -387,4 +398,3 @@ class MonodepthModel(object):
             if self.params.full_summary:
                 tf.summary.image('left',  self.left,   max_outputs=4, collections=self.model_collection)
                 tf.summary.image('right', self.right,  max_outputs=4, collections=self.model_collection)
-

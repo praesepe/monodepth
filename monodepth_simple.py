@@ -56,7 +56,10 @@ def test_simple(params):
     original_height, original_width, num_channels = input_image.shape
     input_image = scipy.misc.imresize(input_image, [args.input_height, args.input_width], interp='lanczos')
     input_image = input_image.astype(np.float32) / 255
+    print(input_image.shape)
+    print(np.fliplr(input_image).shape)
     input_images = np.stack((input_image, np.fliplr(input_image)), 0)
+    print(input_images.shape)
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -74,10 +77,23 @@ def test_simple(params):
     # RESTORE
     restore_path = args.checkpoint_path.split(".")[0]
     train_saver.restore(sess, restore_path)
-
+    for i in range(len(tf.trainable_variables())):
+        print("haha", sess.run(tf.trainable_variables()[i]).shape, tf.trainable_variables()[i].name)
+        #b0 = np.reshape(sess.run(tf.trainable_variables()[i]), (1,-1))
+        #b0 = sess.run(tf.trainable_variables()[i])
+        #print("qwer", b0.shape)
+        #np.save("./pretrained/weight_" + str(i) + ".txt", b0)
+    print("haha", sess.run(tf.trainable_variables()[0][:,:,1,0]))
+    #b0 = np.reshape(sess.run(tf.trainable_variables()[0]), (7,7,3,-1))
+    #b0 = sess.run(tf.trainable_variables()[0])
+    #np.savetxt("W1_conv1.txt", b0)
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
+    #print(disp.shape, disp.max(), disp.min())
+    #print("hahahahahahahaha", sess.run(model.pool1[0,:,:,0], feed_dict={left: input_images}))
+    #print(sess.run(model.model_input[0,:,:,0], feed_dict={left: input_images}))
+    plt.imsave("this.jpg", disp.squeeze()[0])
     disp_pp = post_process_disparity(disp.squeeze()).astype(np.float32)
-
+    print(disp_pp.squeeze().shape)
     output_directory = os.path.dirname(args.image_path)
     output_name = os.path.splitext(os.path.basename(args.image_path))[0]
 

@@ -73,7 +73,7 @@ def bilinear_sampler_1d_h(input_images, x_offset, wrap_mode='border', name='bili
 
             x_t_flat = tf.reshape(x_t, (1, -1))
             y_t_flat = tf.reshape(y_t, (1, -1))
-
+            print("i am hua hua", x_t_flat.shape)
             x_t_flat = tf.tile(x_t_flat, tf.stack([_num_batch, 1]))
             y_t_flat = tf.tile(y_t_flat, tf.stack([_num_batch, 1]))
 

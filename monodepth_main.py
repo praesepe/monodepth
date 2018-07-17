@@ -23,7 +23,8 @@ import tensorflow.contrib.slim as slim
 from monodepth_model import *
 from monodepth_dataloader import *
 from average_gradients import *
-
+from PIL import Image
+import scipy.misc
 parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
 
 parser.add_argument('--mode',                      type=str,   help='train or test', default='train')
@@ -210,10 +211,19 @@ def test(params):
     disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     for step in range(num_test_samples):
+        print(step+1, "/", num_test_samples)
         disp = sess.run(model.disp_left_est[0])
         disparities[step] = disp[0].squeeze()
+        print(disp.squeeze().shape, disp.shape)
         disparities_pp[step] = post_process_disparity(disp.squeeze())
-
+        if step == 0:
+            #print(disparities[0])
+            #im = Image.fromarray(disparities[0]*255).convert('RGB')
+            #im.save('disp.png')
+            #im_pp = Image.fromarray(disparities_pp[0]*255).convert('RGB')
+            #im_pp.save('disp_pp.png')
+            scipy.misc.imsave('disp_mono.png', disparities[0])
+            scipy.misc.imsave('disp_pp_mono.png', disparities_pp[0])
     print('done.')
 
     print('writing disparities.')

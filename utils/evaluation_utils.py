@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-import cv, cv2
+import cv2
 from collections import Counter
 import pickle
 
@@ -101,7 +101,7 @@ def read_file_data(files, data_root):
         else:
             num_probs += 1
             print('{} missing'.format(data_root + im))
-    print num_probs, 'files missing'
+    print (num_probs, 'files missing')
 
     return gt_files, gt_calib, im_sizes, im_files, cams
 
@@ -135,7 +135,7 @@ def read_calib_file(path):
             if float_chars.issuperset(value):
                 # try to cast to float array
                 try:
-                    data[key] = np.array(map(float, value.split(' ')))
+                    data[key] = np.array(list(map(float, value.split(' '))))
                 except ValueError:
                     # casting error: data[key] already eq. value, so pass
                     pass
@@ -205,7 +205,7 @@ def generate_depth_map(calib_dir, velo_file_name, im_shape, cam=2, interp=False,
 
     # find the duplicate points and choose the closest depth
     inds = sub2ind(depth.shape, velo_pts_im[:, 1], velo_pts_im[:, 0])
-    dupe_inds = [item for item, count in Counter(inds).iteritems() if count > 1]
+    dupe_inds = [item for item, count in Counter(inds).items() if count > 1]
     for dd in dupe_inds:
         pts = np.where(inds==dd)[0]
         x_loc = int(velo_pts_im[pts[0], 0])
